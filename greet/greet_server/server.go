@@ -3,6 +3,7 @@ package main
 import (
 	context "context"
 	"fmt"
+	"github.com/saha/grpc-go-course/greet"
 	"github.com/saha/grpc-go-course/greet/greetpb"
 	"google.golang.org/grpc"
 	"log"
@@ -30,7 +31,7 @@ func (*server) Greet(ctx context.Context, request *greetpb.GreetRequest) (*greet
 func main() {
 	fmt.Println("Starting gRPC Server")
 
-	lis, err := net.Listen("tcp", "localhost:50051")
+	lis, err := net.Listen(greet.Protocol, greet.Host)
 
 	if err != nil {
 		log.Fatal("Failed to listen :- ", err)

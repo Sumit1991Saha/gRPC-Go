@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/saha/grpc-go-course/greet"
+
 	"log"
 
 	"github.com/saha/grpc-go-course/greet/greetpb"
@@ -12,7 +14,7 @@ import (
 func main() {
 	fmt.Println("Starting gRPC Client")
 
-	clientConnection, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	clientConnection, err := grpc.Dial(greet.Host, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Could not connect: %v", err)
 	}
@@ -29,7 +31,7 @@ func doUnary(client greetpb.GreetServiceClient) {
 	request := &greetpb.GreetRequest{
 		Greeting: &greetpb.Greeting{
 			FirstName: "Sumit",
-			LastName: "Saha",
+			LastName:  "Saha",
 		},
 	}
 	response, err := client.Greet(context.Background(), request)
