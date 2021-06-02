@@ -132,42 +132,39 @@ func doBiDirectionalStreaming(client greetpb.GreetServiceClient) {
 	wg.Add(1)
 
 	//Here we are Sending and receiving messages on the same stream but in differetn go routine
-	go bidirectionalSender(requests, stream)
-	go bidirectionalReceiver(wg, stream)
+	go func(requests []*greetpb.GreetEveryoneRequest, stream greetpb.GreetService_GreetEveryoneClient) {
+		// Func to send some messages
+		for _, req := range requests {
+			log.Printf("Request sent from Client  : %v from client \n", req)
+			// This send is not a blocking call, on the server there seems a queue if the server is not able to process the data
+			err := stream.Send(req)
+			if err != nil {
+				log.Fatalf("Unable to send request %v", err)
+			}
+			//time.Sleep(1*time.Second)
+		}
+		err := stream.CloseSend()
+		if err != nil {
+			log.Fatalf("Unable to close stream %v", err)
+		}
+	}(requests, stream)
+
+	go func(wg *sync.WaitGroup, stream greetpb.GreetService_GreetEveryoneClient) {
+		// Func to receive some messages
+		for {
+			res, recvErr := stream.Recv()
+			if recvErr == io.EOF {
+				break
+			}
+			if recvErr != nil {
+				log.Fatalf("Error while receiving stream %v", recvErr)
+			}
+			log.Printf("Response received at Client : %v \n", res.Result)
+		}
+		wg.Done()
+	}(wg, stream)
 
 	wg.Wait()
-}
-
-func bidirectionalSender(requests []*greetpb.GreetEveryoneRequest, stream greetpb.GreetService_GreetEveryoneClient) {
-	// Func to send some messages
-	for _, req := range requests {
-		log.Printf("Request sent from Client  : %v from client \n", req)
-		// This send is not a blocking call, on the server there seems a queue if the server is not able to process the data
-		err := stream.Send(req)
-		if err != nil {
-			log.Fatalf("Unable to send request %v", err)
-		}
-		//time.Sleep(1*time.Second)
-	}
-	err := stream.CloseSend()
-	if err != nil {
-		log.Fatalf("Unable to close stream %v", err)
-	}
-}
-
-func bidirectionalReceiver(wg *sync.WaitGroup, stream greetpb.GreetService_GreetEveryoneClient) {
-	// Func to receive some messages
-	for {
-		res, recvErr := stream.Recv()
-		if recvErr == io.EOF {
-			break
-		}
-		if recvErr != nil {
-			log.Fatalf("Error while receiving stream %v", recvErr)
-		}
-		log.Printf("Response received at Client : %v \n", res.Result)
-	}
-	wg.Done()
 }
 
 func main() {
