@@ -3,6 +3,7 @@ package main
 import (
 	context "context"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"strconv"
@@ -49,6 +50,27 @@ func (*server) GreetManyTimes(request *greetpb.GreetManyTimesRequest, stream gre
 		time.Sleep(1000 * time.Millisecond)
 	}
 	return nil
+}
+
+func (*server) LongGreet(stream greetpb.GreetService_LongGreetServer) error {
+	log.Printf("LongGreet function invoked with streaming request \n")
+	result := ""
+	for {
+		request, err := stream.Recv()
+		log.Printf("Received request : %v", request)
+		if err == io.EOF {
+			response := &greetpb.LongGreetResponse{
+				Result: result,
+			}
+			log.Printf("Sending response : %v", result)
+			return stream.SendAndClose(response)
+		} else if err != nil {
+			log.Fatalf("Error while reading client Stream %v", err)
+		}
+		firstName := request.GetGreeting().GetFirstName()
+		lastName := request.GetGreeting().GetLastName()
+		result += "Hello " + firstName + " " + lastName + "! "
+	}
 }
 
 func main() {
