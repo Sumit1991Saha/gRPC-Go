@@ -178,7 +178,7 @@ func main() {
 		log.Fatalf("Could not connect: %v", err)
 	}
 	defer func(clientConnection *grpc.ClientConn) {
-		err := clientConnection.Close()
+		err = clientConnection.Close()
 		if err != nil {
 		}
 	}(clientConnection)
