@@ -73,6 +73,40 @@ func (*server) LongGreet(stream greetpb.GreetService_LongGreetServer) error {
 	}
 }
 
+func (*server) GreetEveryone(stream greetpb.GreetService_GreetEveryoneServer) error {
+	log.Printf("GreetEveryone function invoked with streaming request \n")
+
+	for {
+		request, recvErr := stream.Recv()
+		if recvErr == io.EOF {
+			return nil
+		}
+		if recvErr != nil {
+			log.Fatalf("Error while reading client Stream %v", recvErr)
+		}
+		log.Printf("Request received at server : %v \n", request)
+
+		response := processRequestForBidirectionalStreams(request)
+		sendErr := stream.Send(response)
+		if sendErr != nil {
+			log.Fatalf("Error while sending resposne to client %v", sendErr)
+		}
+		log.Printf("Response sent from server : %v \n\n", response)
+	}
+}
+
+func processRequestForBidirectionalStreams(request *greetpb.GreetEveryoneRequest) *greetpb.GreetEveryoneResponse {
+	log.Printf("Request being processed at server : %v \n", request)
+	time.Sleep(5 * time.Second)
+	firstName := request.GetGreeting().GetFirstName()
+	lastName := request.GetGreeting().GetLastName()
+	result := "Hello " + firstName + " " + lastName + "! "
+	response := &greetpb.GreetEveryoneResponse{
+		Result: result,
+	}
+	return response
+}
+
 func main() {
 	fmt.Println("Starting gRPC Server")
 

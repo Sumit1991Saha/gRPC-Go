@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"log"
+	"sync"
 	"time"
 
 	"google.golang.org/grpc"
@@ -97,6 +98,78 @@ func doClientStreaming(client greetpb.GreetServiceClient) {
 	log.Printf("LongGreet received response : %v", response)
 }
 
+func doBiDirectionalStreaming(client greetpb.GreetServiceClient) {
+	log.Println("Starting to do a BiDirectional Streaming RPC...")
+
+	requests := []*greetpb.GreetEveryoneRequest{
+		{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Sumit",
+				LastName:  "Saha",
+			},
+		},
+		{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Sumit1",
+				LastName:  "Saha1",
+			},
+		},
+		{
+			Greeting: &greetpb.Greeting{
+				FirstName: "Sumit2",
+				LastName:  "Saha2",
+			},
+		},
+	}
+
+	// We create a stream by invoking the client
+	stream, err := client.GreetEveryone(context.Background())
+	if err != nil {
+		log.Fatalf("Error while creating stream in GreetEveryone : %v", err)
+	}
+
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
+	wg.Add(1)
+	// We send a bunch of messages to the client (go routine)
+	go bidirectionalSender(requests, stream)
+	// We receive a bunch of messages from the client (go routine)
+	go bidirectionalReceiver(wg, stream)
+	// block until everything is done
+}
+
+func bidirectionalSender(requests []*greetpb.GreetEveryoneRequest, stream greetpb.GreetService_GreetEveryoneClient) {
+	// Func to send some messages
+	for _, req := range requests {
+		log.Printf("Request sent from Client  : %v from client \n", req)
+		// This send is not a blocking call, on the server there seems a queue if the server is not able to process the data
+		err := stream.Send(req)
+		if err != nil {
+			log.Fatalf("Unable to send request %v", err)
+		}
+		//time.Sleep(1*time.Second)
+	}
+	err := stream.CloseSend()
+	if err != nil {
+		log.Fatalf("Unable to close stream %v", err)
+	}
+}
+
+func bidirectionalReceiver(wg *sync.WaitGroup, stream greetpb.GreetService_GreetEveryoneClient) {
+	// Func to receive some messages
+	for {
+		res, recvErr := stream.Recv()
+		if recvErr == io.EOF {
+			break
+		}
+		if recvErr != nil {
+			log.Fatalf("Error while receiving stream %v", recvErr)
+		}
+		log.Printf("Response received at Client : %v \n", res.Result)
+	}
+	wg.Done()
+}
+
 func main() {
 	log.Println("Starting gRPC Client")
 
@@ -114,5 +187,6 @@ func main() {
 
 	//doUnary(client)
 	//doServerStreaming(client)
-	doClientStreaming(client)
+	//doClientStreaming(client)
+	doBiDirectionalStreaming(client)
 }
