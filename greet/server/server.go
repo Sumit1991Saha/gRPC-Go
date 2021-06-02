@@ -3,11 +3,15 @@ package main
 import (
 	context "context"
 	"fmt"
-	"github.com/saha/grpc-go-course/greet"
-	"github.com/saha/grpc-go-course/greet/greetpb"
-	"google.golang.org/grpc"
 	"log"
 	"net"
+	"strconv"
+	"time"
+
+	"google.golang.org/grpc"
+
+	"github.com/saha/grpc-go-course/greet"
+	"github.com/saha/grpc-go-course/greet/greetpb"
 )
 
 type server struct {
@@ -26,6 +30,25 @@ func (*server) Greet(ctx context.Context, request *greetpb.GreetRequest) (*greet
 		Result: "Hello " + firstName + " " + lastName,
 	}
 	return greetResponse, nil
+}
+
+func (*server) GreetManyTimes(request *greetpb.GreetManyTimesRequest, stream greetpb.GreetService_GreetManyTimesServer) error {
+	fmt.Printf("GreetManyTimes function invoked with %v \n", request)
+	greetRequest := request.GetGreeting()
+	if greetRequest == nil {
+		return nil
+	}
+	firstName := greetRequest.GetFirstName()
+	lastName := greetRequest.GetLastName()
+
+	for i := 0; i < 10; i++ {
+		response := &greetpb.GreetManyTimesResponse{
+			Result: "Hello " + firstName + " " + lastName + " " + strconv.Itoa(i),
+		}
+		_ = stream.Send(response)
+		time.Sleep(1000 * time.Millisecond)
+	}
+	return nil
 }
 
 func main() {
