@@ -129,13 +129,13 @@ func doBiDirectionalStreaming(client greetpb.GreetServiceClient) {
 	}
 
 	wg := &sync.WaitGroup{}
-	defer wg.Wait()
 	wg.Add(1)
-	// We send a bunch of messages to the client (go routine)
+
+	//Here we are Sending and receiving messages on the same stream but in differetn go routine
 	go bidirectionalSender(requests, stream)
-	// We receive a bunch of messages from the client (go routine)
 	go bidirectionalReceiver(wg, stream)
-	// block until everything is done
+
+	wg.Wait()
 }
 
 func bidirectionalSender(requests []*greetpb.GreetEveryoneRequest, stream greetpb.GreetService_GreetEveryoneClient) {
