@@ -1,7 +1,7 @@
 package main
 
 import (
-	context "context"
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/saha/grpc-go-course/greet"
 	"github.com/saha/grpc-go-course/greet/greetpb"
@@ -105,6 +107,27 @@ func processRequestForBidirectionalStreams(request *greetpb.GreetEveryoneRequest
 		Result: result,
 	}
 	return response
+}
+
+func (*server) GreetWithDeadline(ctx context.Context, request *greetpb.GreetRequest) (*greetpb.GreetResponse, error) {
+	fmt.Printf("Greet function invoked with %v \n", request)
+	for i := 0; i < 3 ; i++ {
+		if ctx.Err() == context.Canceled {
+			fmt.Println("The client cancelled the request")
+			return nil, status.Error(codes.Canceled,"The client cancelled the request")
+		}
+		time.Sleep(1 * time.Second)
+	}
+	greetRequest := request.GetGreeting()
+	if greetRequest == nil {
+		return nil, nil
+	}
+	firstName := greetRequest.GetFirstName()
+	lastName := greetRequest.GetLastName()
+	greetResponse := &greetpb.GreetResponse{
+		Result: "Hello " + firstName + " " + lastName,
+	}
+	return greetResponse, nil
 }
 
 func main() {
