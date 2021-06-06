@@ -10,6 +10,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
 
 	"github.com/saha/grpc-go-course/greet"
@@ -170,7 +171,7 @@ func doBiDirectionalStreaming(client greetpb.GreetServiceClient) {
 	wg.Wait()
 }
 
-func doUnaryWithDealine(client greetpb.GreetServiceClient, timeout time.Duration) {
+func doUnaryWithDeadline(client greetpb.GreetServiceClient, timeout time.Duration) {
 	log.Println("Starting to do a Unary RPC...")
 	request := &greetpb.GreetRequest{
 		Greeting: &greetpb.Greeting{
@@ -202,7 +203,36 @@ func doUnaryWithDealine(client greetpb.GreetServiceClient, timeout time.Duration
 func main() {
 	log.Println("Starting gRPC Client")
 
-	clientConnection, err := grpc.Dial(greet.Host, grpc.WithInsecure())
+	var dialOptions []grpc.DialOption
+	if greet.UseTLS {
+		certFile := "ssl/ca.crt" //Certificate Authority Trust certificate
+		creds, sslErr := credentials.NewClientTLSFromFile(certFile, "localhost")
+		if sslErr != nil {
+			log.Fatalf("Error while loading CA trust certificate : %v", sslErr)
+		}
+		dialOptions = append(dialOptions, grpc.WithTransportCredentials(creds))
+
+		/*serverCertFile := "ssl/server.crt" //Certificate Authority Trust certificate
+		caCert, err := ioutil.ReadFile(serverCertFile)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		rootCAs := x509.NewCertPool()
+		rootCAs.AppendCertsFromPEM(caCert)
+
+		tlsConf := &tls.Config{
+			RootCAs:            rootCAs,
+			InsecureSkipVerify: false,
+			MinVersion:         tls.VersionTLS12,
+			ServerName:         "localhost",
+		}
+		dialOptions = append(dialOptions, grpc.WithTransportCredentials(credentials.NewTLS(tlsConf)))*/
+	} else {
+		dialOptions = append(dialOptions, grpc.WithInsecure())
+	}
+
+	clientConnection, err := grpc.Dial(greet.Host, dialOptions...) // With SSL
 	if err != nil {
 		log.Fatalf("Could not connect: %v", err)
 	}
@@ -214,11 +244,14 @@ func main() {
 
 	client := greetpb.NewGreetServiceClient(clientConnection)
 
-	//doUnary(client)
-	//doServerStreaming(client)
-	//doClientStreaming(client)
-	//doBiDirectionalStreaming(client)
-
-	doUnaryWithDealine(client, 5 * time.Second) // should complete
-	doUnaryWithDealine(client, 1 * time.Second) // should timeout
+	doUnary(client)
+	fmt.Println()
+	doServerStreaming(client)
+	fmt.Println()
+	doClientStreaming(client)
+	fmt.Println()
+	doBiDirectionalStreaming(client)
+	fmt.Println()
+	doUnaryWithDeadline(client, 5 * time.Second) // should complete
+	doUnaryWithDeadline(client, 1 * time.Second) // should timeout
 }
