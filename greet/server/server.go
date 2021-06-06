@@ -133,7 +133,7 @@ func (*server) GreetWithDeadline(ctx context.Context, request *greetpb.GreetRequ
 }
 
 func main() {
-	fmt.Println("Starting gRPC Server")
+	fmt.Println("Starting Greet gRPC Server")
 
 	lis, err := net.Listen(greet.Protocol, greet.Host)
 
