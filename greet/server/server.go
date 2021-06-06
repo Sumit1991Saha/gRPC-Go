@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 
 	"github.com/saha/grpc-go-course/greet"
@@ -155,6 +156,7 @@ func main() {
 	localServer := server{}
 
 	greetpb.RegisterGreetServiceServer(grpcServer, &localServer)
+	reflection.Register(grpcServer)
 
 	if err = grpcServer.Serve(lis); err != nil {
 		log.Fatal("Failed to server :- ", err)
