@@ -12,7 +12,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 
 	"github.com/saha/grpc-go-course/blog"
 	"github.com/saha/grpc-go-course/blog/blogpb"
@@ -21,6 +23,7 @@ import (
 var (
 	collection *mongo.Collection
 )
+
 type server struct {
 	blogpb.BlogServiceServer
 }
@@ -30,6 +33,38 @@ type blogItem struct {
 	AuthorID string             `bson:"author_id"`
 	Content  string             `bson:"content"`
 	Title    string             `bson:"title"`
+}
+
+func (*server) CreateBlog(ctx context.Context, request *blogpb.CreateBlogRequest) (*blogpb.CreateBlogResponse, error) {
+	fmt.Println("CreateBlog is executed")
+	blogData := request.GetBlog()
+	data := &blogItem{
+		AuthorID: blogData.GetAuthorId(),
+		Content:  blogData.GetContent(),
+		Title:    blogData.GetTitle(),
+	}
+	result, err := collection.InsertOne(ctx, data)
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			fmt.Sprintf("Internal Error : %v", err),
+		)
+	}
+	oid, ok := result.InsertedID.(primitive.ObjectID)
+	if !ok {
+		return nil, status.Errorf(
+			codes.Internal,
+			fmt.Sprintf("Cannot convert to OID: %v", err),
+		)
+	}
+	return &blogpb.CreateBlogResponse{
+		Blog: &blogpb.Blog{
+			Id: oid.Hex(),
+			AuthorId: blogData.GetAuthorId(),
+			Content:  blogData.GetContent(),
+			Title:    blogData.GetTitle(),
+		},
+	}, nil
 }
 
 func main() {
@@ -42,7 +77,7 @@ func main() {
 	stopServices(mongoClient, grpcServer)
 }
 
-func startServices() ( *mongo.Client, *grpc.Server) {
+func startServices() (*mongo.Client, *grpc.Server) {
 	mongoClient := startMongoService()
 	grpcServer := startGRPCService()
 	return mongoClient, grpcServer
@@ -89,4 +124,3 @@ func stopServices(mongoClient *mongo.Client, grpcServer *grpc.Server) {
 	fmt.Println("\n Stopping Blog gRPC Server")
 	grpcServer.Stop()
 }
-
