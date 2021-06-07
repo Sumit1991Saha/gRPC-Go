@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"io"
 	"log"
 
 	"google.golang.org/grpc"
@@ -30,6 +30,8 @@ func main() {
 
 	readBlog(client, blog)
 	updateBlog(client, blog)
+	deleteBlog(client, blog)
+	listBlog(client)
 }
 
 func createBlog(client blogpb.BlogServiceClient) *blogpb.Blog{
@@ -46,8 +48,9 @@ func createBlog(client blogpb.BlogServiceClient) *blogpb.Blog{
 	)
 	if err != nil {
 		log.Fatalf("Unexpected error : %v \n", err)
+	} else {
+		log.Printf("Blog has been created : %v \n", response)
 	}
-	log.Printf("Blog has been created : %v \n", response)
 	return response.Blog
 }
 
@@ -65,9 +68,9 @@ func readBlog(client blogpb.BlogServiceClient, blog *blogpb.Blog) {
 	readBlogRes, err := client.ReadBlog(context.Background(), readBlogReq)
 	if err != nil {
 		log.Printf("Error happened while reading: %v \n", err)
+	} else {
+		log.Printf("Blog was read: %v \n", readBlogRes)
 	}
-
-	log.Printf("Blog was read: %v \n", readBlogRes)
 }
 
 func updateBlog(client blogpb.BlogServiceClient, blog *blogpb.Blog) {
@@ -80,7 +83,38 @@ func updateBlog(client blogpb.BlogServiceClient, blog *blogpb.Blog) {
 	}
 	updateRes, updateErr := client.UpdateBlog(context.Background(), &blogpb.UpdateBlogRequest{Blog: newBlog})
 	if updateErr != nil {
-		fmt.Printf("Error happened while updating: %v \n", updateErr)
+		log.Printf("Error happened while updating: %v \n", updateErr)
+	} else {
+		log.Printf("Blog was updated: %v\n", updateRes)
 	}
-	fmt.Printf("Blog was updated: %v\n", updateRes)
+}
+
+func deleteBlog(client blogpb.BlogServiceClient, blog *blogpb.Blog)  {
+	// delete Blog
+	deleteRes, deleteErr := client.DeleteBlog(context.Background(), &blogpb.DeleteBlogRequest{BlogId: blog.GetId()})
+
+	if deleteErr != nil {
+		log.Printf("Error happened while deleting: %v \n", deleteErr)
+	} else {
+		log.Printf("Blog was deleted: %v \n", deleteRes)
+	}
+}
+
+func listBlog(client blogpb.BlogServiceClient) {
+	// list Blogs
+
+	stream, err := client.ListBlog(context.Background(), &blogpb.ListBlogRequest{})
+	if err != nil {
+		log.Fatalf("error while calling ListBlog RPC: %v", err)
+	}
+	for {
+		res, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatalf("Something happened: %v", err)
+		}
+		log.Println(res.GetBlog())
+	}
 }
