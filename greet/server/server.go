@@ -147,13 +147,13 @@ func main() {
 	var serverOptions []grpc.ServerOption
 	if greet.UseTLS {
 		// Load the server certificate and its key
-		serverCert, err := tls.LoadX509KeyPair("ssl/server.pem", "ssl/server.key")
+		serverCert, err := tls.LoadX509KeyPair("certs/server/server.pem", "certs/server/server.key")
 		if err != nil {
 			log.Fatalf("Failed to load server certificate and key. %s.", err)
 		}
 
 		// Load the CA certificate
-		trustedCert, err := ioutil.ReadFile("ssl/cacert.pem")
+		trustedCert, err := ioutil.ReadFile("certs/ca/cacert.pem")
 		if err != nil {
 			log.Fatalf("Failed to load trusted certificate. %s.", err)
 		}

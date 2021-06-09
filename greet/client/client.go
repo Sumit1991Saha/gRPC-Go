@@ -208,13 +208,13 @@ func main() {
 
 	var dialOptions []grpc.DialOption
 	if greet.UseTLS {
-		clientCert, err := tls.LoadX509KeyPair("ssl/client.pem", "ssl/client.key")
+		clientCert, err := tls.LoadX509KeyPair("certs/client/client.pem", "certs/client/client.key")
 		if err != nil {
 			log.Fatalf("Failed to load client certificate and key. %s.", err)
 		}
 
 		// Load the CA certificate
-		trustedCert, err := ioutil.ReadFile("ssl/cacert.pem")
+		trustedCert, err := ioutil.ReadFile("certs/ca/cacert.pem")
 		if err != nil {
 			log.Fatalf("Failed to load trusted certificate. %s.", err)
 		}
