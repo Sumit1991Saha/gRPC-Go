@@ -2,8 +2,11 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"sync"
 	"time"
@@ -205,29 +208,34 @@ func main() {
 
 	var dialOptions []grpc.DialOption
 	if greet.UseTLS {
-		certFile := "ssl/ca.crt" //Certificate Authority Trust certificate
-		creds, sslErr := credentials.NewClientTLSFromFile(certFile, "localhost")
-		if sslErr != nil {
-			log.Fatalf("Error while loading CA trust certificate : %v", sslErr)
-		}
-		dialOptions = append(dialOptions, grpc.WithTransportCredentials(creds))
-
-		/*serverCertFile := "ssl/server.crt" //Certificate Authority Trust certificate
-		caCert, err := ioutil.ReadFile(serverCertFile)
+		clientCert, err := tls.LoadX509KeyPair("ssl/client.pem", "ssl/client.key")
 		if err != nil {
-			log.Fatalln(err)
+			log.Fatalf("Failed to load client certificate and key. %s.", err)
 		}
 
-		rootCAs := x509.NewCertPool()
-		rootCAs.AppendCertsFromPEM(caCert)
-
-		tlsConf := &tls.Config{
-			RootCAs:            rootCAs,
-			InsecureSkipVerify: false,
-			MinVersion:         tls.VersionTLS12,
-			ServerName:         "localhost",
+		// Load the CA certificate
+		trustedCert, err := ioutil.ReadFile("ssl/cacert.pem")
+		if err != nil {
+			log.Fatalf("Failed to load trusted certificate. %s.", err)
 		}
-		dialOptions = append(dialOptions, grpc.WithTransportCredentials(credentials.NewTLS(tlsConf)))*/
+
+		// Put the CA certificate to certificate pool
+		certPool := x509.NewCertPool()
+		if !certPool.AppendCertsFromPEM(trustedCert) {
+			log.Fatalf("Failed to append trusted certificate to certificate pool. %s.", err)
+		}
+
+		// Create the TLS configuration
+		tlsConfig := &tls.Config{
+			Certificates: []tls.Certificate{clientCert},
+			RootCAs:      certPool,
+			MinVersion:   tls.VersionTLS13,
+			MaxVersion:   tls.VersionTLS13,
+		}
+
+		// Create a new TLS credentials based on the TLS configuration
+		cred := credentials.NewTLS(tlsConfig)
+		dialOptions = append(dialOptions, grpc.WithTransportCredentials(cred))
 	} else {
 		dialOptions = append(dialOptions, grpc.WithInsecure())
 	}
@@ -245,7 +253,7 @@ func main() {
 	client := greetpb.NewGreetServiceClient(clientConnection)
 
 	doUnary(client)
-	fmt.Println()
+	/*fmt.Println()
 	doServerStreaming(client)
 	fmt.Println()
 	doClientStreaming(client)
@@ -253,5 +261,5 @@ func main() {
 	doBiDirectionalStreaming(client)
 	fmt.Println()
 	doUnaryWithDeadline(client, 5 * time.Second) // should complete
-	doUnaryWithDeadline(client, 1 * time.Second) // should timeout
+	doUnaryWithDeadline(client, 1 * time.Second) // should timeout*/
 }
