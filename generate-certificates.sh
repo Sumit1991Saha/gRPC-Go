@@ -2,29 +2,29 @@
 
 function generateCACertificate() {
   echo "Generating CA Certificate"
-  openssl ecparam -name prime256v1 -genkey -noout -out certs/ca/cakey.key
-  openssl req -x509 -new -nodes -key certs/ca/cakey.key -subj "/CN=ServerMonCA/C=SM" -days 3650 -out certs/ca/cacert.pem
+  openssl ecparam -name prime256v1 -genkey -noout -out certs/cakey.key
+  openssl req -x509 -new -nodes -key certs/cakey.key -subj "/CN=ServerMonCA/C=SM" -days 3650 -out certs/cacert.pem
 }
 
 function generateServerCertificate() {
   echo "Generating Server Certificate"
-  openssl ecparam -name prime256v1 -genkey -noout -out certs/server/server.key
+  openssl ecparam -name prime256v1 -genkey -noout -out certs/server.key
   generateCSRConfigForServer
-  openssl req -new -key certs/server/server.key -out certs/server/server.csr -config certs/server/csrserver.conf
-  openssl x509 -req -in certs/server/server.csr -CA certs/ca/cacert.pem -CAkey certs/ca/cakey.key -CAcreateserial -out certs/server/server.pem -days 3650 -extfile certs/server/csrserver.conf -extensions req_ext
+  openssl req -new -key certs/server.key -out certs/server.csr -config certs/csrserver.conf
+  openssl x509 -req -in certs/server.csr -CA certs/cacert.pem -CAkey certs/cakey.key -CAcreateserial -out certs/server.pem -days 3650 -extfile certs/csrserver.conf -extensions req_ext
 }
 
 function generateClientCertificate() {
   echo "Generating Client Certificate"
-  openssl ecparam -name prime256v1 -genkey -noout -out certs/client/client.key
+  openssl ecparam -name prime256v1 -genkey -noout -out certs/client.key
   generateCSRConfigForClient
-  openssl req -new -key certs/client/client.key -out certs/client/client.csr -config certs/client/csrclient.conf
-  openssl x509 -req -in certs/client/client.csr -CA certs/ca/cacert.pem -CAkey certs/ca/cakey.key -CAcreateserial -out certs/client/client.pem -days 3650 -extfile certs/client/csrclient.conf -extensions req_ext
+  openssl req -new -key certs/client.key -out certs/client.csr -config certs/csrclient.conf
+  openssl x509 -req -in certs/client.csr -CA certs/cacert.pem -CAkey certs/cakey.key -CAcreateserial -out certs/client.pem -days 3650 -extfile certs/csrclient.conf -extensions req_ext
 }
 
 function generateCSRConfigForServer() {
   echo "Generating CSR config for server"
-cat > certs/server/csrserver.conf <<EOF
+cat > certs/csrserver.conf <<EOF
   [ req ]
   default_bits = 256
   prompt = no
@@ -50,7 +50,7 @@ EOF
 
 function generateCSRConfigForClient() {
   echo "Generating CSR config for Client"
-cat > certs/client/csrclient.conf <<EOF
+cat > certs/csrclient.conf <<EOF
   [ req ]
   default_bits = 256
   prompt = no
@@ -72,11 +72,8 @@ EOF
 function generateCerts() {
   rm -rf certs
   mkdir certs
-  mkdir certs/ca/
   generateCACertificate
-  mkdir certs/server/
   generateServerCertificate
-  mkdir certs/client/
   generateClientCertificate
 }
 

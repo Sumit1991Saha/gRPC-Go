@@ -104,7 +104,7 @@ func (*server) GreetEveryone(stream greetpb.GreetService_GreetEveryoneServer) er
 
 func processRequestForBidirectionalStreams(request *greetpb.GreetEveryoneRequest) *greetpb.GreetEveryoneResponse {
 	log.Printf("Request being processed at server : %v \n", request)
-	time.Sleep(5 * time.Second)
+	time.Sleep(10 * time.Second)
 	firstName := request.GetGreeting().GetFirstName()
 	lastName := request.GetGreeting().GetLastName()
 	result := "Hello " + firstName + " " + lastName + "! "
@@ -147,13 +147,13 @@ func main() {
 	var serverOptions []grpc.ServerOption
 	if greet.UseTLS {
 		// Load the server certificate and its key
-		serverCert, err := tls.LoadX509KeyPair("certs/server/server.pem", "certs/server/server.key")
+		serverCert, err := tls.LoadX509KeyPair("certs/server.pem", "certs/server.key")
 		if err != nil {
 			log.Fatalf("Failed to load server certificate and key. %s.", err)
 		}
 
 		// Load the CA certificate
-		trustedCert, err := ioutil.ReadFile("certs/ca/cacert.pem")
+		trustedCert, err := ioutil.ReadFile("certs/cacert.pem")
 		if err != nil {
 			log.Fatalf("Failed to load trusted certificate. %s.", err)
 		}

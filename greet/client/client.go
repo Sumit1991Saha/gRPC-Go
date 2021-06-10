@@ -138,7 +138,7 @@ func doBiDirectionalStreaming(client greetpb.GreetServiceClient) {
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 
-	//Here we are Sending and receiving messages on the same stream but in differetn go routine
+	//Here we are Sending and receiving messages on the same stream but in different go routine
 	go func(requests []*greetpb.GreetEveryoneRequest, stream greetpb.GreetService_GreetEveryoneClient) {
 		// Func to send some messages
 		for _, req := range requests {
@@ -159,12 +159,12 @@ func doBiDirectionalStreaming(client greetpb.GreetServiceClient) {
 	go func(wg *sync.WaitGroup, stream greetpb.GreetService_GreetEveryoneClient) {
 		// Func to receive some messages
 		for {
-			res, recvErr := stream.Recv()
-			if recvErr == io.EOF {
+			res, err := stream.Recv()
+			if err == io.EOF {
 				break
 			}
-			if recvErr != nil {
-				log.Fatalf("Error while receiving stream %v", recvErr)
+			if err != nil {
+				log.Fatalf("Error while receiving stream %v", err)
 			}
 			log.Printf("Response received at Client : %v \n", res.Result)
 		}
@@ -208,13 +208,13 @@ func main() {
 
 	var dialOptions []grpc.DialOption
 	if greet.UseTLS {
-		clientCert, err := tls.LoadX509KeyPair("certs/client/client.pem", "certs/client/client.key")
+		clientCert, err := tls.LoadX509KeyPair("certs/client.pem", "certs/client.key")
 		if err != nil {
 			log.Fatalf("Failed to load client certificate and key. %s.", err)
 		}
 
 		// Load the CA certificate
-		trustedCert, err := ioutil.ReadFile("certs/ca/cacert.pem")
+		trustedCert, err := ioutil.ReadFile("certs/cacert.pem")
 		if err != nil {
 			log.Fatalf("Failed to load trusted certificate. %s.", err)
 		}
@@ -252,14 +252,14 @@ func main() {
 
 	client := greetpb.NewGreetServiceClient(clientConnection)
 
-	doUnary(client)
-	/*fmt.Println()
+	/*doUnary(client)
+	fmt.Println()
 	doServerStreaming(client)
 	fmt.Println()
 	doClientStreaming(client)
-	fmt.Println()
+	fmt.Println()*/
 	doBiDirectionalStreaming(client)
-	fmt.Println()
+	/*fmt.Println()
 	doUnaryWithDeadline(client, 5 * time.Second) // should complete
 	doUnaryWithDeadline(client, 1 * time.Second) // should timeout*/
 }
