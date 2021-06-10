@@ -18,6 +18,7 @@ import (
 
 	"github.com/saha/grpc-go-course/greet"
 	"github.com/saha/grpc-go-course/greet/greetpb"
+	"github.com/saha/grpc-go-course/utils"
 )
 
 func doUnary(client greetpb.GreetServiceClient) {
@@ -204,6 +205,7 @@ func doUnaryWithDeadline(client greetpb.GreetServiceClient, timeout time.Duratio
 }
 
 func main() {
+	utils.SetLogger("logs/greet-client-logs.txt")
 	log.Println("Starting gRPC Client")
 
 	var dialOptions []grpc.DialOption

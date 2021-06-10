@@ -9,9 +9,11 @@ import (
 
 	"github.com/saha/grpc-go-course/blog/blogpb"
 	"github.com/saha/grpc-go-course/greet"
+	"github.com/saha/grpc-go-course/utils"
 )
 
 func main() {
+	utils.SetLogger("logs/blog-client-logs.txt")
 	log.Println("Starting Blog Client")
 
 	clientConnection, err := grpc.Dial(greet.Host, grpc.WithInsecure())

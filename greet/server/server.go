@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -20,6 +19,7 @@ import (
 
 	"github.com/saha/grpc-go-course/greet"
 	"github.com/saha/grpc-go-course/greet/greetpb"
+	"github.com/saha/grpc-go-course/utils"
 )
 
 type server struct {
@@ -27,7 +27,7 @@ type server struct {
 }
 
 func (*server) Greet(ctx context.Context, request *greetpb.GreetRequest) (*greetpb.GreetResponse, error) {
-	fmt.Printf("Greet function invoked with %v \n", request)
+	log.Printf("Greet function invoked with %v \n", request)
 	greetRequest := request.GetGreeting()
 	if greetRequest == nil {
 		return nil, nil
@@ -41,7 +41,7 @@ func (*server) Greet(ctx context.Context, request *greetpb.GreetRequest) (*greet
 }
 
 func (*server) GreetManyTimes(request *greetpb.GreetManyTimesRequest, stream greetpb.GreetService_GreetManyTimesServer) error {
-	fmt.Printf("GreetManyTimes function invoked with %v \n", request)
+	log.Printf("GreetManyTimes function invoked with %v \n", request)
 	greetRequest := request.GetGreeting()
 	if greetRequest == nil {
 		return nil
@@ -115,10 +115,10 @@ func processRequestForBidirectionalStreams(request *greetpb.GreetEveryoneRequest
 }
 
 func (*server) GreetWithDeadline(ctx context.Context, request *greetpb.GreetRequest) (*greetpb.GreetResponse, error) {
-	fmt.Printf("Greet function invoked with %v \n", request)
+	log.Printf("Greet function invoked with %v \n", request)
 	for i := 0; i < 3 ; i++ {
 		if ctx.Err() == context.Canceled {
-			fmt.Println("The client cancelled the request")
+			log.Println("The client cancelled the request")
 			return nil, status.Error(codes.Canceled,"The client cancelled the request")
 		}
 		time.Sleep(1 * time.Second)
@@ -136,7 +136,9 @@ func (*server) GreetWithDeadline(ctx context.Context, request *greetpb.GreetRequ
 }
 
 func main() {
-	fmt.Println("Starting Greet gRPC Server")
+	utils.SetLogger("logs/greet-server-logs.txt")
+
+	log.Println("Starting Greet gRPC Server")
 
 	lis, err := net.Listen(greet.Protocol, greet.Host)
 

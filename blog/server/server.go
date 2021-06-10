@@ -20,6 +20,7 @@ import (
 
 	"github.com/saha/grpc-go-course/blog"
 	"github.com/saha/grpc-go-course/blog/blogpb"
+	"github.com/saha/grpc-go-course/utils"
 )
 
 var (
@@ -213,6 +214,7 @@ func dataToBlogPb(data *blogItem) *blogpb.Blog {
 }
 
 func main() {
+	utils.SetLogger("logs/blog-server-logs.txt")
 	// if we crash the go code, we get the file name and line number
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	mongoClient, grpcServer := startServices()
@@ -230,7 +232,7 @@ func startServices() (*mongo.Client, *grpc.Server) {
 
 func startMongoService() *mongo.Client {
 	// connect to MongoDB
-	fmt.Println("Connecting to MongoDB")
+	log.Println("Connecting to MongoDB")
 	mongoClient, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
 	if err != nil {
 		log.Fatal(err)
@@ -239,13 +241,13 @@ func startMongoService() *mongo.Client {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Blog Service Started")
+	log.Println("Blog Service Started")
 	collection = mongoClient.Database("mydb").Collection("blog")
 	return mongoClient
 }
 
 func startGRPCService() *grpc.Server {
-	fmt.Println("Starting Blog gRPC Server")
+	log.Println("Starting Blog gRPC Server")
 	lis, err := net.Listen(blog.Protocol, blog.Host)
 	if err != nil {
 		log.Fatal("Failed to listen :- ", err)
@@ -262,10 +264,10 @@ func startGRPCService() *grpc.Server {
 }
 func stopServices(mongoClient *mongo.Client, grpcServer *grpc.Server) {
 	// First we close the connection with MongoDB:
-	fmt.Print("\n Closing MongoDB Connection")
+	log.Print("\n Closing MongoDB Connection")
 	if err := mongoClient.Disconnect(context.TODO()); err != nil {
 		log.Fatalf("Error on disconnection with MongoDB : %v", err)
 	}
-	fmt.Println("\n Stopping Blog gRPC Server")
+	log.Println("\n Stopping Blog gRPC Server")
 	grpcServer.Stop()
 }
