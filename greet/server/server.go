@@ -23,7 +23,7 @@ import (
 )
 
 type server struct {
-	greetpb.UnimplementedGreetServiceServer
+	greetpb.GreetServiceServer
 }
 
 func (*server) Greet(ctx context.Context, request *greetpb.GreetRequest) (*greetpb.GreetResponse, error) {
