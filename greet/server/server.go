@@ -19,7 +19,6 @@ import (
 
 	"github.com/saha/grpc-go-course/greet"
 	"github.com/saha/grpc-go-course/greet/greetpb"
-	"github.com/saha/grpc-go-course/utils"
 )
 
 type server struct {
@@ -136,7 +135,7 @@ func (*server) GreetWithDeadline(ctx context.Context, request *greetpb.GreetRequ
 }
 
 func main() {
-	utils.SetLogger("logs/greet-server-logs.txt")
+	//utils.SetLogger("logs/greet-server-logs.txt")
 
 	log.Println("Starting Greet gRPC Server")
 

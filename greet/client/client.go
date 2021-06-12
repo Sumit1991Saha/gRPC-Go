@@ -18,7 +18,6 @@ import (
 
 	"github.com/saha/grpc-go-course/greet"
 	"github.com/saha/grpc-go-course/greet/greetpb"
-	"github.com/saha/grpc-go-course/utils"
 )
 
 func doUnary(client greetpb.GreetServiceClient) {
@@ -205,7 +204,7 @@ func doUnaryWithDeadline(client greetpb.GreetServiceClient, timeout time.Duratio
 }
 
 func main() {
-	utils.SetLogger("logs/greet-client-logs.txt")
+	//utils.SetLogger("logs/greet-client-logs.txt")
 	log.Println("Starting gRPC Client")
 
 	var dialOptions []grpc.DialOption
@@ -254,14 +253,14 @@ func main() {
 
 	client := greetpb.NewGreetServiceClient(clientConnection)
 
-	/*doUnary(client)
-	fmt.Println()
+	doUnary(client)
+	/*fmt.Println()
 	doServerStreaming(client)
 	fmt.Println()
 	doClientStreaming(client)
-	fmt.Println()*/
+	fmt.Println()
 	doBiDirectionalStreaming(client)
-	/*fmt.Println()
+	fmt.Println()
 	doUnaryWithDeadline(client, 5 * time.Second) // should complete
 	doUnaryWithDeadline(client, 1 * time.Second) // should timeout*/
 }
