@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"google.golang.org/grpc"
@@ -19,6 +20,10 @@ import (
 	"github.com/saha/grpc-go-course/greet"
 	"github.com/saha/grpc-go-course/greet/greetpb"
 )
+
+var successFullCount int32
+var errorCount int32
+var durationInSeconds int32
 
 func doUnary(client greetpb.GreetServiceClient) {
 	log.Println("Starting to do a Unary RPC...")
@@ -203,6 +208,35 @@ func doUnaryWithDeadline(client greetpb.GreetServiceClient, timeout time.Duratio
 
 }
 
+func doUnaryPerf(_ greetpb.GreetServiceClient, done bool, i int) {
+	log.Println("Starting to do a Unary RPC...")
+	request := &greetpb.GreetRequest{
+		Greeting: &greetpb.Greeting{
+			FirstName: "Sumit",
+			LastName:  "Saha",
+		},
+	}
+	for {
+		if done {
+			break
+		}
+		clientConnection, err := grpc.Dial(greet.Host, grpc.WithInsecure())
+		if err != nil {
+			log.Fatalf("Could not connect: %v", err)
+		}
+		client := greetpb.NewGreetServiceClient(clientConnection)
+		response, err := client.Greet(context.Background(), request)
+		if err != nil {
+			atomic.AddInt32(&errorCount, 1)
+			log.Printf("Error while calling Greet rpc : %v", err)
+		} else {
+			atomic.AddInt32(&successFullCount, 1)
+			log.Printf("Response from greet %v : %v",i,  response.Result)
+		}
+		_ = clientConnection.Close()
+	}
+}
+
 func main() {
 	//utils.SetLogger("logs/greet-client-logs.txt")
 	log.Println("Starting gRPC Client")
@@ -252,9 +286,8 @@ func main() {
 	}(clientConnection)
 
 	client := greetpb.NewGreetServiceClient(clientConnection)
-
-	doUnary(client)
-	/*fmt.Println()
+	/*doUnary(client)
+	fmt.Println()
 	doServerStreaming(client)
 	fmt.Println()
 	doClientStreaming(client)
@@ -263,4 +296,23 @@ func main() {
 	fmt.Println()
 	doUnaryWithDeadline(client, 5 * time.Second) // should complete
 	doUnaryWithDeadline(client, 1 * time.Second) // should timeout*/
+
+
+	// PerfSetup
+	done := false
+	atomic.AddInt32(&durationInSeconds, 10)
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	time.AfterFunc(time.Duration(durationInSeconds)*time.Second, func() {
+		done = true
+		wg.Done()
+	})
+	for i := 0; i < 100; i++ {
+		go doUnaryPerf(client, done, i)
+	}
+	wg.Wait()
+	log.Printf("No. of RPC calls  %v in %v", successFullCount, durationInSeconds)
+	log.Printf("No. of Failures  %v", errorCount)
+
+
 }
