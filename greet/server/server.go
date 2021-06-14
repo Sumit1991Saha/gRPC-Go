@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"os"
 	"strconv"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 
 	"github.com/saha/grpc-go-course/greet"
 	"github.com/saha/grpc-go-course/greet/greetpb"
+	"github.com/saha/grpc-go-course/greet/utils"
 )
 
 type server struct {
@@ -135,11 +137,14 @@ func (*server) GreetWithDeadline(ctx context.Context, request *greetpb.GreetRequ
 }
 
 func main() {
-	//utils.SetLogger("logs/greet-server-logs.txt")
+	LogFileLocation := os.Getenv("LOG_FILE_LOCATION")
+	if LogFileLocation != "" {
+		utils.SetLogger(LogFileLocation)
+	}
 
 	log.Println("Starting Greet gRPC Server")
 
-	lis, err := net.Listen(greet.Protocol, greet.Host)
+	lis, err := net.Listen(greet.Protocol, greet.Address)
 
 	if err != nil {
 		log.Fatal("Failed to listen :- ", err)

@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -19,6 +20,7 @@ import (
 
 	"github.com/saha/grpc-go-course/greet"
 	"github.com/saha/grpc-go-course/greet/greetpb"
+	"github.com/saha/grpc-go-course/greet/utils"
 )
 
 var successFullCount int32
@@ -220,7 +222,7 @@ func doUnaryPerf(_ greetpb.GreetServiceClient, done bool, i int) {
 		if done {
 			break
 		}
-		clientConnection, err := grpc.Dial(greet.Host, grpc.WithInsecure())
+		clientConnection, err := grpc.Dial(greet.Address, grpc.WithInsecure())
 		if err != nil {
 			log.Fatalf("Could not connect: %v", err)
 		}
@@ -238,7 +240,11 @@ func doUnaryPerf(_ greetpb.GreetServiceClient, done bool, i int) {
 }
 
 func main() {
-	//utils.SetLogger("logs/greet-client-logs.txt")
+	LogFileLocation := os.Getenv("LOG_FILE_LOCATION")
+	if LogFileLocation != "" {
+		utils.SetLogger(LogFileLocation)
+	}
+
 	log.Println("Starting gRPC Client")
 
 	var dialOptions []grpc.DialOption
@@ -275,7 +281,7 @@ func main() {
 		dialOptions = append(dialOptions, grpc.WithInsecure())
 	}
 
-	clientConnection, err := grpc.Dial(greet.Host, dialOptions...) // With SSL
+	clientConnection, err := grpc.Dial(greet.Address, dialOptions...) // With SSL
 	if err != nil {
 		log.Fatalf("Could not connect: %v", err)
 	}
@@ -286,8 +292,8 @@ func main() {
 	}(clientConnection)
 
 	client := greetpb.NewGreetServiceClient(clientConnection)
-	/*doUnary(client)
-	fmt.Println()
+	doUnary(client)
+	/*fmt.Println()
 	doServerStreaming(client)
 	fmt.Println()
 	doClientStreaming(client)
@@ -299,7 +305,7 @@ func main() {
 
 
 	// PerfSetup
-	done := false
+	/*done := false
 	atomic.AddInt32(&durationInSeconds, 100)
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
@@ -313,6 +319,6 @@ func main() {
 	wg.Wait()
 	log.Printf("No. of RPC calls  %v in %v", successFullCount, durationInSeconds)
 	log.Printf("No. of Failures  %v", errorCount)
-
+*/
 
 }
