@@ -300,7 +300,7 @@ func main() {
 
 	// PerfSetup
 	done := false
-	atomic.AddInt32(&durationInSeconds, 10)
+	atomic.AddInt32(&durationInSeconds, 100)
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	time.AfterFunc(time.Duration(durationInSeconds)*time.Second, func() {

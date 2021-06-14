@@ -167,6 +167,7 @@ func main() {
 
 		// Create the TLS configuration
 		tlsConfig := &tls.Config{
+			ClientAuth: tls.RequireAndVerifyClientCert,
 			Certificates: []tls.Certificate{serverCert},
 			RootCAs:      certPool,
 			ClientCAs:    certPool,
