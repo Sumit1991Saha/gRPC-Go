@@ -1,12 +1,10 @@
-#!/bin/zsh
-
-function generateCACertificate() {
+generateCACertificate() {
   echo "Generating CA Certificate"
   openssl ecparam -name prime256v1 -genkey -noout -out certs/cakey.key
   openssl req -x509 -new -nodes -key certs/cakey.key -subj "/CN=ServerMonCA/C=SM" -days 3650 -out certs/cacert.pem
 }
 
-function generateServerCertificate() {
+generateServerCertificate() {
   echo "Generating Server Certificate"
   openssl ecparam -name prime256v1 -genkey -noout -out certs/server.key
   generateCSRConfigForServer
@@ -14,7 +12,7 @@ function generateServerCertificate() {
   openssl x509 -req -in certs/server.csr -CA certs/cacert.pem -CAkey certs/cakey.key -CAcreateserial -out certs/server.pem -days 3650 -extfile certs/csrserver.conf -extensions req_ext
 }
 
-function generateClientCertificate() {
+generateClientCertificate() {
   echo "Generating Client Certificate"
   openssl ecparam -name prime256v1 -genkey -noout -out certs/client.key
   generateCSRConfigForClient
@@ -22,7 +20,7 @@ function generateClientCertificate() {
   openssl x509 -req -in certs/client.csr -CA certs/cacert.pem -CAkey certs/cakey.key -CAcreateserial -out certs/client.pem -days 3650 -extfile certs/csrclient.conf -extensions req_ext
 }
 
-function generateCSRConfigForServer() {
+generateCSRConfigForServer() {
   echo "Generating CSR config for server"
 cat > certs/csrserver.conf <<EOF
   [ req ]
@@ -48,7 +46,7 @@ cat > certs/csrserver.conf <<EOF
 EOF
 }
 
-function generateCSRConfigForClient() {
+generateCSRConfigForClient() {
   echo "Generating CSR config for Client"
 cat > certs/csrclient.conf <<EOF
   [ req ]
@@ -69,7 +67,7 @@ cat > certs/csrclient.conf <<EOF
 EOF
 }
 
-function generateCerts() {
+generateCerts() {
   rm -rf certs
   mkdir certs
   generateCACertificate

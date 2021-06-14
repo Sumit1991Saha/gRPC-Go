@@ -18,6 +18,10 @@ RUN go mod download
 # Copy the source from the current directory to the Working Directory inside the container
 COPY . .
 
+# Execute the certificate generation script
+# RUN chmod +x generate-certificates.sh
+# RUN ./generate-certificates.sh
+
 # Build the Go app
 RUN go build -o greet-server server/server.go
 

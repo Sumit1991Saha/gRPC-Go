@@ -253,18 +253,21 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to load client certificate and key. %s.", err)
 		}
+		log.Println("Client Cert loaded")
 
 		// Load the CA certificate
 		trustedCert, err := ioutil.ReadFile("certs/cacert.pem")
 		if err != nil {
 			log.Fatalf("Failed to load trusted certificate. %s.", err)
 		}
+		log.Println("CA Cert loaded")
 
 		// Put the CA certificate to certificate pool
 		certPool := x509.NewCertPool()
 		if !certPool.AppendCertsFromPEM(trustedCert) {
 			log.Fatalf("Failed to append trusted certificate to certificate pool. %s.", err)
 		}
+		log.Println("Cert pool loaded")
 
 		// Create the TLS configuration
 		tlsConfig := &tls.Config{
