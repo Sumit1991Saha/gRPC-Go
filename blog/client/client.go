@@ -7,16 +7,16 @@ import (
 
 	"google.golang.org/grpc"
 
+	"github.com/saha/grpc-go-course/blog"
 	"github.com/saha/grpc-go-course/blog/blogpb"
-	"github.com/saha/grpc-go-course/greet"
-	"github.com/saha/grpc-go-course/utils"
+	"github.com/saha/grpc-go-course/blog/utils"
 )
 
 func main() {
 	utils.SetLogger("logs/blog-client-logs.txt")
 	log.Println("Starting Blog Client")
 
-	clientConnection, err := grpc.Dial(greet.Host, grpc.WithInsecure())
+	clientConnection, err := grpc.Dial(blog.Address, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Could not connect: %v", err)
 	}
@@ -28,11 +28,11 @@ func main() {
 
 	client := blogpb.NewBlogServiceClient(clientConnection)
 
-	blog := createBlog(client)
+	blogData := createBlog(client)
 
-	readBlog(client, blog)
-	updateBlog(client, blog)
-	deleteBlog(client, blog)
+	readBlog(client, blogData)
+	updateBlog(client, blogData)
+	deleteBlog(client, blogData)
 	listBlog(client)
 }
 

@@ -20,7 +20,7 @@ import (
 
 	"github.com/saha/grpc-go-course/blog"
 	"github.com/saha/grpc-go-course/blog/blogpb"
-	"github.com/saha/grpc-go-course/utils"
+	"github.com/saha/grpc-go-course/blog/utils"
 )
 
 var (
@@ -248,7 +248,7 @@ func startMongoService() *mongo.Client {
 
 func startGRPCService() *grpc.Server {
 	log.Println("Starting Blog gRPC Server")
-	lis, err := net.Listen(blog.Protocol, blog.Host)
+	lis, err := net.Listen(blog.Protocol, blog.Address)
 	if err != nil {
 		log.Fatal("Failed to listen :- ", err)
 	}
