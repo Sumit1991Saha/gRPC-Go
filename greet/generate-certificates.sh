@@ -1,7 +1,7 @@
 generateCACertificate() {
   echo "Generating CA Certificate"
   openssl ecparam -name prime256v1 -genkey -noout -out certs/cakey.key
-  openssl req -x509 -new -nodes -key certs/cakey.key -subj "/CN=ServerMonCA/C=SM" -days 3650 -out certs/cacert.pem
+  openssl req -x509 -new -nodes -key certs/cakey.key -subj "/CN=ServerMonCA" -days 3650 -out certs/cacert.pem
 }
 
 generateServerCertificate() {
@@ -31,7 +31,6 @@ cat > certs/csrserver.conf <<EOF
   distinguished_name = dn
 
   [ dn ]
-  C = SM
   CN = localhost
 
   [ req_ext ]
@@ -57,7 +56,6 @@ cat > certs/csrclient.conf <<EOF
   distinguished_name = dn
 
   [ dn ]
-  C = SM
   CN = client
 
   [ req_ext ]
